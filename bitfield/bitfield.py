@@ -230,13 +230,17 @@ class Bitfield(object):
             return self.value.__eq__(other.value)
         return False
 
+    # Begin awful boilerplate code to make Bitfields act just like integers. Subclassing isn't an
+    # option because ints are immutable, and that throws out the whole point of using __getitem__
+    # and __setitem__.
+
     def __add__(self, other):
         if isinstance(other, int):
             return self.__class__(self.value.__add__(other))
         elif isinstance(other, Bitfield):
             return self.__class__(self.value.__add__(other.value))
         else:
-            raise TypeError(f'Bitfield unsupported operand type(s) for +: Bitfield and {type(other)}')
+            raise TypeError(f'unsupported operand type(s) for +: Bitfield and {type(other)}')
 
     def __radd__(self, other):
         return self.__add__(other)
@@ -247,124 +251,242 @@ class Bitfield(object):
         elif isinstance(other, Bitfield):
             return self.__class__(self.value.__sub__(other.value))
         else:
-            raise TypeError(f'Bitfield unsupported operand type(s) for -: Bitfield and {type(other)}')
+            raise TypeError(f'unsupported operand type(s) for -: Bitfield and {type(other)}')
 
     def __rsub__(self, other):
         if isinstance(other, int):
             return self.__class__(self.value.__rsub__(other))
         else:
-            raise TypeError(f'Bitfield unsupported operand type(s) for -: {type(other)} and Bitfield')
-    #
-    # def __mul__(self, other):
-    #     return self.value.__mul__(other)
-    #
-    # def __matmul__(self, other):
-    #     return self.value.__matmul__(other)
-    #
-    # def __truediv__(self, other):
-    #     return self.value.__truediv__(other)
-    #
-    # def __floordiv__(self, other):
-    #     return self.value.__floordiv__(other)
-    #
-    # def __mod__(self, other):
-    #     return self.value.__mod__(other)
-    #
-    # def __divmod__(self, other):
-    #     return self.value.__divmod__(other)
-    #
-    # def __pow__(self, other, modulo=None):
-    #     return self.value.__pow__(other, modulo)
-    #
-    # def __lshift__(self, other):
-    #     return self.value.__lshift__(other)
-    #
-    # def __rshift__(self, other):
-    #     return self.value.__rshift__(other)
-    #
-    # def __and__(self, other):
-    #     return self.value.__and__(other)
-    #
-    # def __xor__(self, other):
-    #     return self.value.__xor__(other)
-    #
-    # def __or__(self, other):
-    #     return self.value.__or__(other)
+            raise TypeError(f'unsupported operand type(s) for -: {type(other)} and Bitfield')
 
-    # def __radd__(self, other):
-    #     return self.value.__radd__(other)
-    #
-    # def __rsub__(self, other):
-    #     return self.value.__rsub__(other)
-    #
-    # def __rmul__(self, other):
-    #     return self.value.__rmul__(other)
-    #
-    # def __rmatmul__(self, other):
-    #     return self.value.__rmatmul__(other)
-    #
-    # def __rtruediv__(self, other):
-    #     return self.value.__rtruediv__(other)
-    #
-    # def __rfloordiv__(self, other):
-    #     return self.value.__rfloordiv__(other)
-    #
-    # def __rmod__(self, other):
-    #     return self.value.__rmod__(other)
-    #
-    # def __rdivmod__(self, other):
-    #     return self.value.__rdivmod__(other)
-    #
-    # def __rlshift__(self, other):
-    #     return self.value.__rlshift__(other)
-    #
-    # def __rrshift__(self, other):
-    #     return self.value.__rrshift__(other)
-    #
-    # def __rand__(self, other):
-    #     return self.value.__rand__(other)
-    #
-    # def __rxor__(self, other):
-    #     return self.value.__rxor__(other)
-    #
-    # def __ror__(self, other):
-    #     return self.value.__ror__(other)
-    #
-    # def __iadd__(self, other):
-    #     return self.value.__iadd__(other)
-    #
-    # def __isub__(self, other):
-    #     return self.value.__isub__(other)
-    #
-    # def __imul__(self, other):
-    #     return self.value.__imul__(other)
-    #
-    # def __imatmul__(self, other):
-    #     return self.value.__imatmul__(other)
-    #
-    # def __itruediv__(self, other):
-    #     return self.value.__itruediv__(other)
-    #
-    # def __ifloordiv__(self, other):
-    #     return self.value.__ifloordiv__(other)
-    #
-    # def __imod__(self, other):
-    #     return self.value.__imod__(other)
-    #
-    # def __ipow__(self, other, modulo=None):
-    #     return self.value.__ipow__(other, modulo)
-    #
-    # def __ilshift__(self, other):
-    #     return self.value.__ilshift__(other)
-    #
-    # def __irshift__(self, other):
-    #     return self.value.__irshift__(other)
-    #
-    # def __iand__(self, other):
-    #     return self.value.__iand__(other)
-    #
-    # def __ixor__(self, other):
-    #     return self.value.__ixor__(other)
-    #
-    # def __ior__(self, other):
-    #     return self.value.__ior__(other)
+    def __mul__(self, other):
+        if isinstance(other, int):
+            return self.__class__(self.value.__mul__(other))
+        elif isinstance(other, Bitfield):
+            return self.__class__(self.value.__mul__(other.value))
+        else:
+            raise TypeError(f'unsupported operand type(s) for *: Bitfield and {type(other)}')
+
+    def __rmul__(self, other):
+        return self.__mul__(other)
+
+    def __truediv__(self, other):
+        if isinstance(other, int):
+            return self.value.__truediv__(other)
+        elif isinstance(other, Bitfield):
+            return self.value.__truediv__(other.value)
+        else:
+            raise TypeError(f'unsupported operand type(s) for /: Bitfield and {type(other)}')
+
+    def __rtruediv__(self, other):
+        if isinstance(other, int):
+            return self.value.__rtruediv__(other)
+        else:
+            raise TypeError(f'unsupported operand type(s) for /: {type(other)} and Bitfield')
+
+    def __floordiv__(self, other):
+        if isinstance(other, int):
+            return self.__class__(self.value.__floordiv__(other))
+        elif isinstance(other, Bitfield):
+            return self.__class__(self.value.__floordiv__(other.value))
+        else:
+            raise TypeError(f'unsupported operand type(s) for //: Bitfield and {type(other)}')
+
+    def __rfloordiv__(self, other):
+        if isinstance(other, int):
+            return self.__class__(self.value.__rfloordiv__(other))
+        else:
+            raise TypeError(f'unsupported operand type(s) for //: {type(other)} and Bitfield')
+
+    def __mod__(self, other):
+        if isinstance(other, int):
+            return self.__class__(self.value.__mod__(other))
+        elif isinstance(other, Bitfield):
+            return self.__class__(self.value.__mod__(other.value))
+        else:
+            raise TypeError(f'unsupported operand type(s) for %: Bitfield and {type(other)}')
+
+    def __rmod__(self, other):
+        if isinstance(other, int):
+            return self.__class__(self.value.__rmod__(other))
+        else:
+            raise TypeError(f'unsupported operand type(s) for %: {type(other)} and Bitfield')
+
+    def __pow__(self, other, modulus=None):
+        if isinstance(other, int):
+            return self.__class__(self.value.__pow__(other, modulus))
+        elif isinstance(other, Bitfield):
+            return self.__class__(self.value.__pow__(other.value, modulus))
+        else:
+            raise TypeError(f'unsupported operand type(s) for **: Bitfield and {type(other)}')
+
+    def __rpow__(self, other, modulus=None):
+        if isinstance(other, int):
+            return self.__class__(self.value.__rpow__(other, modulus))
+        else:
+            raise TypeError(f'unsupported operand type(s) for **: {type(other)} and Bitfield')
+
+    def __lshift__(self, other):
+        if isinstance(other, int):
+            return self.__class__(self.value.__lshift__(other))
+        elif isinstance(other, Bitfield):
+            return self.__class__(self.value.__lshift__(other.value))
+        else:
+            raise TypeError(f'unsupported operand type(s) for <<: Bitfield and {type(other)}')
+
+    def __rlshift__(self, other):
+        return self.__lshift__(other)
+
+    def __rshift__(self, other):
+        if isinstance(other, int):
+            return self.__class__(self.value.__rshift__(other))
+        elif isinstance(other, Bitfield):
+            return self.__class__(self.value.__rshift__(other.value))
+        else:
+            raise TypeError(f'unsupported operand type(s) for >>: Bitfield and {type(other)}')
+
+    def __rrshift__(self, other):
+        return self.__rshift__(other)
+
+    def __and__(self, other):
+        if isinstance(other, int):
+            return self.__class__(self.value.__and__(other))
+        elif isinstance(other, Bitfield):
+            return self.__class__(self.value.__and__(other.value))
+        else:
+            raise TypeError(f'unsupported operand type(s) for &: Bitfield and {type(other)}')
+
+    def __rand__(self, other):
+        return self.__and__(other)
+
+    def __xor__(self, other):
+        if isinstance(other, int):
+            return self.__class__(self.value.__xor__(other))
+        elif isinstance(other, Bitfield):
+            return self.__class__(self.value.__xor__(other.value))
+        else:
+            raise TypeError(f'unsupported operand type(s) for ^: Bitfield and {type(other)}')
+
+    def __rxor__(self, other):
+        return self.__xor__(other)
+
+    def __or__(self, other):
+        if isinstance(other, int):
+            return self.__class__(self.value.__or__(other))
+        elif isinstance(other, Bitfield):
+            return self.__class__(self.value.__or__(other.value))
+        else:
+            raise TypeError(f'unsupported operand type(s) for |: Bitfield and {type(other)}')
+
+    def __ror__(self, other):
+        return self.__or__(other)
+
+    def __iadd__(self, other):
+        if isinstance(other, int):
+            self.value += other
+            return self
+        elif isinstance(other, Bitfield):
+            self.value += other.value
+            return self
+        else:
+            raise TypeError(f'unsupported operand type(s) for +=: Bitfield and {type(other)}')
+
+    def __isub__(self, other):
+        if isinstance(other, int):
+            self.value -= other
+            return self
+        elif isinstance(other, Bitfield):
+            self.value -= other.value
+            return self
+        else:
+            raise TypeError(f'unsupported operand type(s) for -=: Bitfield and {type(other)}')
+
+    def __imul__(self, other):
+        if isinstance(other, int):
+            self.value *= other
+            return self
+        elif isinstance(other, Bitfield):
+            self.value *= other.value
+            return self
+        else:
+            raise TypeError(f'unsupported operand type(s) for *=: Bitfield and {type(other)}')
+
+    def __ifloordiv__(self, other):
+        if isinstance(other, int):
+            self.value //= other
+            return self
+        elif isinstance(other, Bitfield):
+            self.value //= other.value
+            return self
+        else:
+            raise TypeError(f'unsupported operand type(s) for //=: Bitfield and {type(other)}')
+
+    def __imod__(self, other):
+        if isinstance(other, int):
+            self.value %= other
+            return self
+        elif isinstance(other, Bitfield):
+            self.value %= other.value
+            return self
+        else:
+            raise TypeError(f'unsupported operand type(s) for %=: Bitfield and {type(other)}')
+
+    def __ipow__(self, other, modulus=None):
+        if isinstance(other, int):
+            self.value = pow(self.value, other, modulus)
+            return self
+        elif isinstance(other, Bitfield):
+            self.value = pow(self.value, other.value, modulus)
+            return self
+        else:
+            raise TypeError(f'unsupported operand type(s) for **=: Bitfield and {type(other)}')
+
+    def __ilshift__(self, other):
+        if isinstance(other, int):
+            self.value <<= other
+            return self
+        elif isinstance(other, Bitfield):
+            self.value <<= other.value
+            return self
+        else:
+            raise TypeError(f'unsupported operand type(s) for <<=: Bitfield and {type(other)}')
+
+    def __irshift__(self, other):
+        if isinstance(other, int):
+            self.value >>= other
+            return self
+        elif isinstance(other, Bitfield):
+            self.value >>= other.value
+            return self
+        else:
+            raise TypeError(f'unsupported operand type(s) for >>=: Bitfield and {type(other)}')
+
+    def __iand__(self, other):
+        if isinstance(other, int):
+            self.value &= other
+            return self
+        elif isinstance(other, Bitfield):
+            self.value &= other.value
+            return self
+        else:
+            raise TypeError(f'unsupported operand type(s) for &=: Bitfield and {type(other)}')
+
+    def __ixor__(self, other):
+        if isinstance(other, int):
+            self.value ^= other
+            return self
+        elif isinstance(other, Bitfield):
+            self.value ^= other.value
+            return self
+        else:
+            raise TypeError(f'unsupported operand type(s) for ^=: Bitfield and {type(other)}')
+
+    def __ior__(self, other):
+        if isinstance(other, int):
+            self.value |= other
+            return self
+        elif isinstance(other, Bitfield):
+            self.value |= other.value
+            return self
+        else:
+            raise TypeError(f'unsupported operand type(s) for |=: Bitfield and {type(other)}')
