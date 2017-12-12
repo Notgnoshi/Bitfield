@@ -176,13 +176,52 @@ class Bitfield(object):
     """
 
     def __hash__(self):
+        """
+            Makes Bitfields hashable by hashing their underlying value.
+
+            Example:
+            >>> b = Bitfield(0b1010)
+            >>> hash(b)
+            10
+        """
         return hash(self.value)
 
     def __int__(self):
+        """
+            Allows for converting Bitfields to integers
+
+            Example:
+            >>> b = Bitfield(0b1010)
+            >>> type(int(b))
+            <class 'int'>
+            >>> int(b) == 0b1010
+            True
+        """
         return self.value
 
     def __index__(self):
-        return self.value
+        """
+            Allows Python to treat Bitfields as integers, allowing for the use of bin(), hex(),
+            and oct() on Bitfields
+
+            Example:
+            >>> b = Bitfield(0b1010)
+            >>> bin(b)
+            '0b1010'
+        """
+        return self.__int__()
+
+    def __neg__(self):
+        return self.__class__(self.value.__neg__())
+
+    def __pos__(self):
+        return self.__class__(self.value.__pos__())
+
+    def __abs__(self):
+        return self.__class__(self.value.__abs__())
+
+    def __invert__(self):
+        return self.__class__(self.value.__invert__())
 
     def __eq__(self, other):
         if isinstance(other, int):
@@ -202,8 +241,19 @@ class Bitfield(object):
     def __radd__(self, other):
         return self.__add__(other)
 
-    # def __sub__(self, other):
-    #     return self.value.__sub__(other)
+    def __sub__(self, other):
+        if isinstance(other, int):
+            return self.__class__(self.value.__sub__(other))
+        elif isinstance(other, Bitfield):
+            return self.__class__(self.value.__sub__(other.value))
+        else:
+            raise TypeError(f'Bitfield unsupported operand type(s) for -: Bitfield and {type(other)}')
+
+    def __rsub__(self, other):
+        if isinstance(other, int):
+            return self.__class__(self.value.__rsub__(other))
+        else:
+            raise TypeError(f'Bitfield unsupported operand type(s) for -: {type(other)} and Bitfield')
     #
     # def __mul__(self, other):
     #     return self.value.__mul__(other)
