@@ -275,3 +275,73 @@ class BitfieldOperatorsTest(unittest.TestCase):
         self.assertEqual(a1, 0b1111)
         a2 |= 0b0110
         self.assertEqual(a2, 0b0111)
+
+
+class BitfieldSlicingTest(unittest.TestCase):
+    def test_len(self):
+        # Bitfields are *not* fixed width.
+        self.assertEqual(len(a), 2)
+        self.assertEqual(len(b), 4)
+        self.assertEqual(len(a << 65), 67)
+
+    def test_mask(self):
+        self.assertEqual(B.mask(slice(0, 2), 4), 0b11)
+        self.assertEqual(B.mask(slice(0, 4), 4), 0b1111)
+        self.assertEqual(B.mask(slice(None, 4), 4), 0b1111)
+        self.assertEqual(B.mask(slice(2), 4), 0b11)
+        self.assertEqual(B.mask(slice(0, -1), 4), 0b111)
+        self.assertEqual(B.mask(slice(0, -2), 4), 0b11)
+        self.assertEqual(B.mask(slice(1, 2), 4), 0b10)
+        self.assertEqual(B.mask(slice(-4, -2), 4), 0b11)
+
+    def test_getitem(self):
+        bits = B(0b1111)
+
+        # Basic bit indexing:
+        self.assertEqual(bits[0], 0b0001)
+        # Bitfield indexing does *not* produce bits[1] --> 0b0010
+        self.assertEqual(bits[1], 0b0001)
+        self.assertRaises(IndexError, bits.__getitem__, 4)
+        self.assertRaises(IndexError, bits.__getitem__, -5)
+
+        bits = B(0b11110101)
+        self.assertEqual(bits[1], 0b0)
+        self.assertEqual(bits[7], 0b1)
+
+        # Providing __len__, __getitem__, and raising appropriate IndexError's make Bitfields
+        # iterable. Iterates over the bits LSBF.
+        self.assertSequenceEqual(bits, [1, 0, 1, 0, 1, 1, 1, 1])
+
+        self.assertTrue(isinstance(bits[0:2], B))
+
+        bits = B(0b101011)
+
+        self.assertEqual(bits[:], bits)
+        # Reverse endianness
+        self.assertEqual(bits[::-1], 0b110101)
+        # Test slicing subtleties
+        self.assertEqual(bits[:2], 0b11)
+        self.assertEqual(bits[:-1], 0b01011)
+        self.assertEqual(bits[0:2], bits[:2])
+        self.assertEqual(bits[2:], 0b1010)
+        self.assertEqual(bits[2:-1], 0b010)
+        # The most significant bit will *always* be 0b1, even in the case bits = B(0b01)
+        self.assertEqual(B(0b01)[-1], 0b1)
+        self.assertEqual(bits[-1:], 0b1)
+        # 6 is not a valid index, but the endpoint is exclusive
+        self.assertEqual(bits[2:6], 0b1010)
+        self.assertRaises(IndexError, bits.__getitem__, slice(2, 7))
+        self.assertEqual(bits[-3:], 0b101)
+        self.assertEqual(bits[-4:-2], 0b10)
+
+    def test_setitem(self):
+        bits = B(0b1111)
+        bits[:] = 0b1010
+        self.assertEqual(bits, 0b1010)
+        self.assertTrue(isinstance(bits, B))
+
+        bits[0:2] = 0b00
+        self.assertEqual(bits, 0b1000)
+
+        bits[:-1] = 0b111
+        self.assertEqual(bits, 0b1111)

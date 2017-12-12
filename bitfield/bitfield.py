@@ -13,22 +13,19 @@ class Bitfield(object):
     def mask(key, length):
         """
             Generate the mask corresponding to the given slice or index and the bitfield length.
+
+            Indices are least significant bit first:
+
+                b = 0b1110 --> b[0] = 0, b[1] = 1, ...
+
+            Note that, just as any other kind of slicing, the upper bound is exclusive, while the
+            lower bound is inclusive:
+
             Example:
+            >>> l = [0, 1, 2, 3]
+            >>> l[0:2]
+            [0, 1]
             >>> bin(Bitfield.mask(slice(0, 2), 4))
-            '0b11'
-            >>> bin(Bitfield.mask(slice(0, 4), 4))
-            '0b1111'
-            >>> bin(Bitfield.mask(slice(None, 4), 4))
-            '0b1111'
-            >>> bin(Bitfield.mask(slice(2), 4))
-            '0b11'
-            >>> bin(Bitfield.mask(slice(0, -1), 4))
-            '0b111'
-            >>> bin(Bitfield.mask(slice(0, -2), 4))
-            '0b11'
-            >>> bin(Bitfield.mask(slice(1, 2), 4))
-            '0b10'
-            >>> bin(Bitfield.mask(slice(-4, -2), 4))
             '0b11'
         """
         if isinstance(key, int):
@@ -72,46 +69,11 @@ class Bitfield(object):
             >>> b = Bitfield(0b1111)
             >>> bin(b[:])
             '0b1111'
-            >>> bin(b[0])
-            '0b1'
-            >>> bin(b[1])
-            '0b1'
-            >>> bin(b[2])
-            '0b1'
-            >>> bin(b[3])
-            '0b1'
-            >>> bin(b[-1])
-            '0b1'
-            >>> bin(b[-2])
-            '0b1'
-            >>> bin(b[-3])
-            '0b1'
-            >>> bin(b[-4])
-            '0b1'
-            >>> b[4]
-            Traceback (most recent call last):
-              ...
-            IndexError: Bitfield index out of range
-            >>> b[-5]
-            Traceback (most recent call last):
-              ...
-            IndexError: Bitfield index out of range
-            >>> bin(b[:2])
-            '0b11'
-            >>> bin(b[2:])
-            '0b11'
-            >>> bin(b[:-1])
-            '0b111'
-            >>> bin(b[-1:])
-            '0b1'
-            >>> bin(b[0:2])
-            '0b11'
-            >>> bin(b[::-1])
-            '0b1111'
-            >>> b = Bitfield(0b1100)
-            >>> bin(b[::-1])
-            '0b11'
         """
+
+        # TODO: Support full slicing.
+        # TODO: Handle errors directly in __getitem__, rather than relying on self.mask
+
         length = len(self)
         # Special case [::-1] for reversing endianness
         if key == slice(None, None, -1):
@@ -120,19 +82,44 @@ class Bitfield(object):
         temp = self.value & mask
 
         if mask == 0:
-            return 0
+            return self.__class__(0)
 
         # Shift temp and the mask down as long as the mask has a lowest 0
         while mask & 0b01 == 0b00:
             mask >>= 1
             temp >>= 1
 
-        return temp
+        return self.__class__(temp)
 
     def __setitem__(self, key, value):
         """
             Sets the bit(s) at the given key to the provided value. The provided value will be
-            shifted left automatically.
+            shifted left automatically. Thus to set the middle two bits of 0b1001 all that is
+            needed is the following:
+
+            >>> b = Bitfield(0b1001)
+            >>> b[1:3] = 0b11
+            >>> bin(b)
+            '0b1111'
+
+            Rather than the following (wrong) example:
+
+            >>> b = Bitfield(0b1001)
+            >>> b[1:3] = 0b110
+            >>> bin(b)
+            '0b1101'
+
+            This method is provided to eliminate the need for masking:
+
+            >>> b = Bitfield(0b1001)
+            >>> mask = 0b0110
+            >>> b = b & ~mask  # Clear the middle two bits
+            >>> new_middle_values = 0b11
+            >>> new_middle_values <<= 1
+            >>> b |= new_middle_values  # Set both the middle bits to 1
+            >>> bin(b)
+            '0b1111'
+
             Example:
             >>> b = Bitfield(0b1010)
             >>> b[2] = 1
@@ -142,13 +129,14 @@ class Bitfield(object):
             >>> bin(b)
             '0b0'
         """
+        # TODO: Support full slicing.
         length = len(self)
         mask = self.mask(key, length)
         # Zero out the chosen values
         temp = self.value & ~mask
 
         if mask == 0:
-            return 0
+            return
 
         # Shift value left and the mask right as long as the mask has a lowest 0
         while mask & 0b01 == 0b00:
