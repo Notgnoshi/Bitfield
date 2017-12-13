@@ -284,16 +284,6 @@ class BitfieldSlicingTest(unittest.TestCase):
         self.assertEqual(len(b), 4)
         self.assertEqual(len(a << 65), 67)
 
-    def test_mask(self):
-        self.assertEqual(B.mask(slice(0, 2), 4), 0b11)
-        self.assertEqual(B.mask(slice(0, 4), 4), 0b1111)
-        self.assertEqual(B.mask(slice(None, 4), 4), 0b1111)
-        self.assertEqual(B.mask(slice(2), 4), 0b11)
-        self.assertEqual(B.mask(slice(0, -1), 4), 0b111)
-        self.assertEqual(B.mask(slice(0, -2), 4), 0b11)
-        self.assertEqual(B.mask(slice(1, 2), 4), 0b10)
-        self.assertEqual(B.mask(slice(-4, -2), 4), 0b11)
-
     def test_getitem(self):
         bits = B(0b1111)
 
@@ -301,6 +291,7 @@ class BitfieldSlicingTest(unittest.TestCase):
         self.assertEqual(bits[0], 0b0001)
         # Bitfield indexing does *not* produce bits[1] --> 0b0010
         self.assertEqual(bits[1], 0b0001)
+        self.assertEqual(bits[-4], 0b1)
         self.assertRaises(IndexError, bits.__getitem__, 4)
         self.assertRaises(IndexError, bits.__getitem__, -5)
 
@@ -333,6 +324,9 @@ class BitfieldSlicingTest(unittest.TestCase):
         self.assertRaises(IndexError, bits.__getitem__, slice(2, 7))
         self.assertEqual(bits[-3:], 0b101)
         self.assertEqual(bits[-4:-2], 0b10)
+        self.assertEqual(B(0b10101)[::2], 0b111)
+        self.assertEqual(B(0b101010)[1::2], 0b111)
+        self.assertEqual(B(0b1100010001)[-2::-2], 0b10101)
 
     def test_setitem(self):
         bits = B(0b1111)

@@ -9,55 +9,6 @@ class Bitfield(object):
     def __init__(self, value):
         self.value = value
 
-    @staticmethod
-    def mask(key, length):
-        """
-            Generate the mask corresponding to the given slice or index and the bitfield length.
-
-            Indices are least significant bit first:
-
-                b = 0b1110 --> b[0] = 0, b[1] = 1, ...
-
-            Note that, just as any other kind of slicing, the upper bound is exclusive, while the
-            lower bound is inclusive:
-
-            Example:
-            >>> l = [0, 1, 2, 3]
-            >>> l[0:2]
-            [0, 1]
-            >>> bin(Bitfield.mask(slice(0, 2), 4))
-            '0b11'
-        """
-        if isinstance(key, int):
-            if key < 0:
-                key *= -1
-                key = length - key
-
-            if key >= length or key < 0:
-                raise IndexError('Bitfield index out of range')
-
-            mask = 0b1 << key
-        elif isinstance(key, slice):
-            if key.step is not None:
-                raise NotImplementedError('Bitfield slice steps not implemented')
-            start = key.start if key.start is not None else 0
-            stop = key.stop if key.stop is not None else length
-            # If any of the indices are negative, convert them to their positive counterparts.
-            if start < 0:
-                start *= -1
-                start = length - start
-
-            if stop < 0:
-                stop *= -1
-                stop = length - stop
-
-            if stop > length:
-                raise IndexError('Bitfield index out of range')
-
-            num_bits = stop - start
-            mask = ((1 << num_bits) - 1) << start
-        return mask
-
     def __len__(self):
         return self.value.bit_length()
 
@@ -69,27 +20,47 @@ class Bitfield(object):
             >>> b = Bitfield(0b1111)
             >>> bin(b[:])
             '0b1111'
+            >>> bin(b[::2])
+            '0b11'
+            >>> b = Bitfield(0b11001100)
+            >>> bin(b[1::3])
+            '0b100'
+            >>> bin(b[::-1])
+            '0b110011'
         """
-
-        # TODO: Support full slicing.
-        # TODO: Handle errors directly in __getitem__, rather than relying on self.mask
-
         length = len(self)
-        # Special case [::-1] for reversing endianness
-        if key == slice(None, None, -1):
-            return int(f'{self.value:0{length}b}'[::-1], 2)
-        mask = self.mask(key, length)
-        temp = self.value & mask
+        if isinstance(key, int):
+            if key >= length or key < -length:
+                raise IndexError('Bitfield index out of range')
 
-        if mask == 0:
-            return self.__class__(0)
+            if key < 0:
+                key *= -1
+                key = length - key
+            mask = 1 << key
 
-        # Shift temp and the mask down as long as the mask has a lowest 0
-        while mask & 0b01 == 0b00:
-            mask >>= 1
-            temp >>= 1
+            return self.__class__((self.value & mask) >> key)
+        elif isinstance(key, slice):
+            if key.stop is not None and key.stop > length:
+                raise IndexError('Bitfield index out of range')
 
-        return self.__class__(temp)
+            # Leverage existing Python data structures that support full slicing in order to avoid
+            # implementing all of the different combinations and subtleties.
+
+            # Map (0, 1, 2, ...) to the desired indices indicated by the slice.
+            old_indices = tuple(range(length))[key]
+            val = 0b0
+            for new_index, old_index in zip(range(length), old_indices):
+                # Get the sliced indexth bit of self.value
+                b = self.value & (1 << old_index)
+                # Move the bit down to the LSB
+                b >>= old_index
+                # Move the bit up to the MSB of the view
+                b <<= new_index
+                val |= b
+
+            return self.__class__(val)
+        else:
+            raise TypeError(f'unsupported index type: {type(key)}')
 
     def __setitem__(self, key, value):
         """
@@ -129,22 +100,50 @@ class Bitfield(object):
             >>> bin(b)
             '0b0'
         """
-        # TODO: Support full slicing.
         length = len(self)
-        mask = self.mask(key, length)
-        # Zero out the chosen values
-        temp = self.value & ~mask
+        if isinstance(key, int):
+            if key >= length or key < -length:
+                raise IndexError('Bitfield index out of range')
 
-        if mask == 0:
+            if key < 0:
+                key *= -1
+                key = length - key
+            mask = 1 << key
+
+            # Clear the bit of interest:
+            self.value &= ~mask
+            value <<= key
+            self.value |= value
             return
+        elif isinstance(key, slice):
+            if key.stop is not None and key.stop > length:
+                raise IndexError('Bitfield index out of range')
 
-        # Shift value left and the mask right as long as the mask has a lowest 0
-        while mask & 0b01 == 0b00:
-            mask >>= 1
-            value <<= 1
+            # Leverage existing Python data structures that support full slicing in order to avoid
+            # implementing all of the different combinations and subtleties.
 
-        # Fuck. ints are immutable, so this line has no effect if subclassing from int
-        self.value = temp | value
+            # Map (0, 1, 2, ...) to the desired indices indicated by the slice.
+            indices = tuple(range(length))[key]
+            expanded = 0b0
+            mask = 0b0
+            # Not the same as using enumerate, because length could be less than len(indices)
+            for val_index, new_index in zip(range(length), indices):
+                # Generate a mask of the bits of interest
+                mask |= (1 << new_index)
+
+                # Get the ith bit of value
+                b = value & (1 << val_index)
+                # Move bit down to the LSB
+                b >>= val_index
+                # Move bit to its new location
+                b <<= new_index
+                expanded |= b
+
+            # Clear out the bits of interest
+            self.value &= ~mask
+            self.value |= expanded
+        else:
+            raise TypeError(f'unsupported index type: {type(key)}')
 
     def __reversed__(self):
         """
@@ -218,9 +217,11 @@ class Bitfield(object):
             return self.value.__eq__(other.value)
         return False
 
-    # Begin awful boilerplate code to make Bitfields act just like integers. Subclassing isn't an
-    # option because ints are immutable, and that throws out the whole point of using __getitem__
-    # and __setitem__.
+    """
+    Begin awful boilerplate code to make Bitfields act just like integers. Subclassing isn't an
+    option because ints are immutable, and that throws out the whole point of using __getitem__
+    and __setitem__.
+    """
 
     def __add__(self, other):
         if isinstance(other, int):
