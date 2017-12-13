@@ -145,6 +145,54 @@ class Bitfield(object):
         else:
             raise TypeError(f'unsupported index type: {type(key)}')
 
+    def __delitem__(self, key):
+        """
+            Deletes the given keyth values from the bitfield. Does not clear them, it removes them.
+
+            Example:
+            >>> b = Bitfield(0b1001)
+            >>> del b[0]
+            >>> bin(b)
+            '0b100'
+            >>> b = Bitfield(0b1011101)
+            >>> del b[3]
+            >>> bin(b)
+            '0b101101'
+            >>> del b[2:4]
+            >>> bin(b)
+            '0b1001'
+            >>> del b[1:3]
+            >>> bin(b)
+            '0b11'
+        """
+        length = len(self)
+        if isinstance(key, int):
+            if key >= length or key < -length:
+                raise IndexError('Bitfield index out of range')
+
+            if key < 0:
+                key *= -1
+                key = length - key
+
+            right, left = self[:key], self[key + 1:]
+            left <<= key
+            self.value = int(left) | int(right)
+        elif isinstance(key, slice):
+            indices = list(range(length))
+            del indices[key]
+            val = 0b0
+            for new_index, old_index in zip(range(length), indices):
+                # Get the sliced indexth bit of self.value
+                b = self.value & (1 << old_index)
+                # Move the bit down to the LSB
+                b >>= old_index
+                # Move the bit up to the MSB of the view
+                b <<= new_index
+                val |= b
+            self.value = val
+        else:
+            raise TypeError(f'unsupported index type: {type(key)}')
+
     def __reversed__(self):
         """
             Reverses the endianness.

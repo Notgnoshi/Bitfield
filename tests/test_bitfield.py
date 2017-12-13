@@ -339,3 +339,24 @@ class BitfieldSlicingTest(unittest.TestCase):
 
         bits[:-1] = 0b111
         self.assertEqual(bits, 0b1111)
+
+    def test_delitem(self):
+        bits = B(0b101010101)
+        l = len(bits)
+        del bits[0]
+        self.assertEqual(bits, 0b10101010)
+        self.assertEqual(len(bits), l - 1)
+        l = len(bits)
+        del bits[-1]
+        self.assertEqual(bits, 0b101010)
+        # We actually just removed two bits because the MSB will always be 1.
+        self.assertEqual(len(bits), l - 2)
+        l = len(bits)
+        del bits[0::2]
+        self.assertEqual(bits, 0b111)
+        self.assertEqual(len(bits), l - 3)
+        del bits[:]
+        self.assertEqual(bits, 0b0)
+        self.assertEqual(len(bits), 0)
+        self.assertEqual(0b0.bit_length(), 0)
+        self.assertEqual(0b1.bit_length(), 1)
