@@ -360,3 +360,32 @@ class BitfieldSlicingTest(unittest.TestCase):
         self.assertEqual(len(bits), 0)
         self.assertEqual(0b0.bit_length(), 0)
         self.assertEqual(0b1.bit_length(), 1)
+
+
+class BitfieldFixedWidthTest(unittest.TestCase):
+    def test_length(self):
+        n = 0x891237AB17231FED1273619231
+        self.assertGreaterEqual(n.bit_length(), 64)
+        q = B(n)
+        self.assertEqual(len(q), n.bit_length())
+        self.assertEqual(q, n)
+        q = B(n, 64)
+        self.assertEqual(len(q), 64)
+        mask = (0b1 << 64) - 0b1
+        # Grab the lowest 64 bits.
+        m = n & mask
+        self.assertEqual(q, m)
+
+        v = 0b110011001010
+        q = B(v, width=4)
+        self.assertEqual(0b1010, q)
+        self.assertSequenceEqual(q, [0, 1, 0, 1])
+        q.width = 8
+        self.assertEqual(0b11001010, q)
+        q.value = 0b11110000
+        self.assertEqual(len(q), 8)
+        self.assertEqual(0b11110000, q)
+        q.value = v
+        q.width = None
+        self.assertEqual(len(q), v.bit_length())
+        self.assertSequenceEqual(q, [0, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 1])

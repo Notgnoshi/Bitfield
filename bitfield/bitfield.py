@@ -6,10 +6,54 @@ class Bitfield(object):
         TODO
     """
 
-    def __init__(self, value):
+    def __init__(self, value, width=None):
+        """
+            Constructs a Bitfield from an integer and an optional Bitfield width.
+
+            If the Bitfield width is not given, the width will be determined by the index of the
+            most significant 1 bit.
+
+            Example:
+            >>> b = Bitfield(0b0011, width=4)
+            >>> len(b)
+            4
+            >>> list(b)  # equivalent to [bit for bit in b]
+            [1, 1, 0, 0]
+            >>> c = Bitfield(0b0011)
+            >>> len(c)
+            2
+            >>> list(c)
+            [1, 1]
+        """
+        self.width = width
         self.value = value
 
+    @property
+    def value(self):
+        if self.__fixed_width_flag:
+            # When ANDing a small number, say 0b100 with a larger number, say 0b1100, Python
+            # will bring in zeros in the smaller number to bring the two to the same width. Thus we
+            # would get 0b100 & 0b1100 --> 0b0100 & 0b1100 --> 0b0100 --> 0b100
+            mask = (0b1 << self.width) - 1
+            return self.__value & mask
+        return self.__value
+
+    @value.setter
+    def value(self, value):
+        self.__value = value
+
+    @property
+    def width(self):
+        return self.__width
+
+    @width.setter
+    def width(self, width):
+        self.__fixed_width_flag = width is not None
+        self.__width = width
+
     def __len__(self):
+        if self.__fixed_width_flag:
+            return self.width
         return self.value.bit_length()
 
     def __getitem__(self, key):
