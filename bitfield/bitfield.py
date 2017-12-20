@@ -3,7 +3,14 @@ class Bitfield(object):
         A Bitfield class to provide easier bit manipulations.
 
         Example:
-        TODO
+        >>> b = Bitfield(0b11001010)
+        >>> assert 0b1010 == b[:4]
+        >>> assert 0b1100 == b[4:]
+        >>> assert 0b01010011 == b[::-1]
+        >>> b[1::2] = 0b1111
+        >>> assert 0b11101010
+        >>> b[1::2] = 0b1000
+        >>> assert 0b11000000 == b
     """
 
     def __init__(self, value, width=None):

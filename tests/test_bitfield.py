@@ -339,6 +339,17 @@ class BitfieldSlicingTest(unittest.TestCase):
 
         bits[:-1] = 0b111
         self.assertEqual(bits, 0b1111)
+        bits[::2] = 0b00
+        self.assertEqual(bits, 0b1010)
+        # The following has a nasty side effect of setting the bitfield width to 0
+        bits[:] = 0b0
+        self.assertEqual(len(bits), 0)
+        self.assertEqual(0b0.bit_length(), 0)
+        bits = B(0b11001010)
+        bits[::2] = 0b1111
+        self.assertEqual(0b11011111, bits)
+        bits[-1::-1] = 0b10101111
+        self.assertEqual(bits, 0b11110101)
 
     def test_delitem(self):
         bits = B(0b101010101)
