@@ -74,8 +74,11 @@ This Python class is motivated by a previous need of mine to iterate over the bi
     ```
 
 # TODO:
-* Test more extensively with negative numbers
+* **Add inequality magic methods.**
+* Test more extensively with negative numbers -- especially negative fixed width numbers.
 * Add classes/functions for working with `bytes` and `bytearray`s
+    - Read in successive `Bitfield`s from a file, constructed from `bytes` objects. I'm thinking a generator that takes in an arbitrary sized `bytes` or `bytearray` object and yields `Bitfield`s of a certain size until the `bytes` object is exhausted.
+    - `int`s have `to_bytes` and `from_bytes` methods
 * Construct a Bitfield from an iterable?
     - Or should the focus be less on streams as on manipulations?
 * Add Bit manipulation functions from [`crypto`](https://github.com/Notgnoshi/cryptography) library?
