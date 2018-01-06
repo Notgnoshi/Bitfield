@@ -309,13 +309,6 @@ class Bitfield(object):
     def __invert__(self):
         return self.__class__(self.value.__invert__())
 
-    def __eq__(self, other):
-        if isinstance(other, int):
-            return self.value.__eq__(other)
-        elif isinstance(other, Bitfield):
-            return self.value.__eq__(other.value)
-        return False
-
     """
     Begin awful boilerplate code to make Bitfields act just like integers. Subclassing isn't an
     option because ints are immutable, and that throws out the whole point of using __getitem__
@@ -578,3 +571,45 @@ class Bitfield(object):
             return self
         else:
             raise TypeError(f'unsupported operand type(s) for |=: Bitfield and {type(other)}')
+
+    def __eq__(self, other):
+        if isinstance(other, int):
+            return self.value.__eq__(other)
+        elif isinstance(other, Bitfield):
+            return self.value.__eq__(other.value)
+        return False
+
+    def __ne__(self, other):
+        if isinstance(other, int):
+            return self.value.__ne__(other)
+        elif isinstance(other, Bitfield):
+            return self.value.__ne__(other.value)
+        return True
+
+    def __le__(self, other):
+        if isinstance(other, int):
+            return self.value.__le__(other)
+        elif isinstance(other, Bitfield):
+            return self.value.__le__(other.value)
+        return False
+
+    def __ge__(self, other):
+        if isinstance(other, int):
+            return self.value.__ge__(other)
+        elif isinstance(other, Bitfield):
+            return self.value.__ge__(other.value)
+        return False
+
+    def __gt__(self, other):
+        if isinstance(other, int):
+            return self.value.__gt__(other)
+        elif isinstance(other, Bitfield):
+            return self.value.__gt__(other.value)
+        return False
+
+    def __lt__(self, other):
+        if isinstance(other, int):
+            return self.value.__lt__(other)
+        elif isinstance(other, Bitfield):
+            return self.value.__lt__(other.value)
+        return False

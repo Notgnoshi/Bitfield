@@ -37,6 +37,38 @@ class BitfieldOperatorsTest(unittest.TestCase):
         # Bitfield and some non-number type
         self.assertNotEqual(a, [0, 0, 1, 1])
 
+    def test_inequality(self):
+        a1 = B(15)
+        a2 = B(27)
+        b1 = B(16)
+        b2 = B(15)
+
+        self.assertTrue(a1 >= b2)
+        self.assertTrue(a1 <= b2)
+        self.assertTrue(a1 <= a2)
+        self.assertTrue(a1 < b1)
+        self.assertFalse(a1 > a2)
+        self.assertFalse(b1 <= b2)
+
+        c1 = 15
+        c2 = 27
+        d1 = 16
+        d2 = 15
+
+        self.assertTrue(a1 >= d2)
+        self.assertTrue(a1 <= d2)
+        self.assertTrue(a1 <= c2)
+        self.assertTrue(a1 < d1)
+        self.assertFalse(a1 > c2)
+        self.assertFalse(b1 <= d2)
+
+        self.assertTrue(d2 <= a1)
+        self.assertTrue(d1 >= a1)
+        self.assertTrue(c2 >= a1)
+        self.assertTrue(d1 > a1)
+        self.assertFalse(c2 < a1)
+        self.assertFalse(d2 >= b1)
+
     def test_add(self):
         # Add two of the same type
         self.assertEqual(a + b, c + d)
