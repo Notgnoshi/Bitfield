@@ -1,4 +1,5 @@
 from .bitfield import Bitfield
+from .chunker import chunk_file
 
 
 def run_once(func):
