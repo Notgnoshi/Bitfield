@@ -21,6 +21,13 @@ This Python class is motivated by a previous need of mine to iterate over the bi
     ```
 
     Unfortunately, `int`s are immutable, so any subclass of an `int` must also be immutable. Subclassing an `int` would provide the above functionality for free, without all of the nasty duplicated code I have, but would destroy one of the bigger reasons this class exists in the first place: mutability using `__setitem__`.
+* It is also possible to construct a `Bitfield` from `bytes` or `bytearray` objects:
+    ```python
+    >>> from bitfield import Bitfield
+    >>> bits = Bitfield(b'abcd')
+    >>> bin(bits)
+    '0b1100100011000110110001001100001'
+    ```
 * A `Bitfield` also has a `__len__` and a `__getitem__`, and is thus an iterable. This is the main difference between a `Bitfield` and an `int`.
     ```python
     >>> from bitfield import Bitfield
@@ -75,9 +82,6 @@ This Python class is motivated by a previous need of mine to iterate over the bi
 
 # TODO:
 * Test more extensively with negative numbers -- especially negative fixed width numbers.
-* Add classes/functions for working with `bytes` and `bytearray`s
-    - Read in successive `Bitfield`s from a file, constructed from `bytes` objects. I'm thinking a generator that takes in an arbitrary sized `bytes` or `bytearray` object and yields `Bitfield`s of a certain size until the `bytes` object is exhausted.
-    - `int`s have `to_bytes` and `from_bytes` methods
 * Construct a Bitfield from an iterable?
     - Or should the focus be less on streams as on manipulations?
 * Add Bit manipulation functions from [`crypto`](https://github.com/Notgnoshi/cryptography) library?

@@ -32,8 +32,13 @@ class Bitfield(object):
             >>> list(c)
             [1, 1]
         """
+        if isinstance(value, int):
+            self.value = value
+        elif isinstance(value, bytes) or isinstance(value, bytearray):
+            self.value = int.from_bytes(value, 'little')
+        else:
+            raise TypeError(f'unsupported type for Bitfield: {type(value)}')
         self.width = width
-        self.value = value
 
     @property
     def value(self):
