@@ -63,6 +63,7 @@ class Bitfield(object):
             return self.width
         return self.value.bit_length()
 
+    # TODO: return a fixed width Bitfield?
     def __getitem__(self, key):
         """
             Return the bit(s) at the given key(s). Shifts the bits down until *only* the requested
@@ -243,6 +244,52 @@ class Bitfield(object):
             self.value = val
         else:
             raise TypeError(f'unsupported index type: {type(key)}')
+
+    def append(self, other):
+        """
+            Append a Bitfield to the end of this Bitfield.
+
+            Example:
+            >>> b = Bitfield(0b111)
+            >>> c = Bitfield(0b1000)
+            >>> b.append(c)
+            >>> bin(c)
+            '0b1000'
+            >>> bin(b)
+            '0b1000111'
+            >>> b = Bitfield(0b1, width=4)  # 0b0001
+            >>> c = Bitfield(0b111)
+            >>> b.append(c)
+            >>> bin(c)
+            '0b111'
+            >>> bin(b)
+            '0b1110001'
+            >>> b = Bitfield(0b1, width=4)
+            >>> c = Bitfield(0b1)
+            >>> b.append(c)
+            >>> bin(c)
+            '0b1'
+            >>> len(b)
+            5
+            >>> bin(b)
+            '0b10001'
+            >>> b = Bitfield(0b1, width=4)
+            >>> c = Bitfield(0b1, width=4)
+            >>> b.append(c)
+            >>> bin(c)
+            '0b1'
+            >>> len(b)
+            8
+            >>> bin(b)
+            '0b10001'
+        """
+        if not isinstance(other, Bitfield):
+            raise TypeError(f'cannot append {type(other)} to Bitfield')
+        temp = other << len(self)
+        self |= temp
+
+        if self.width is not None or other.width is not None:
+            self.width = len(self) + len(other)
 
     def __reversed__(self):
         """
