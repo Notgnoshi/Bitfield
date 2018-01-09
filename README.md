@@ -82,6 +82,4 @@ This Python class is motivated by a previous need of mine to iterate over the bi
 
 # TODO:
 * Test more extensively with negative numbers -- especially negative fixed width numbers.
-* Construct a Bitfield from an iterable?
-    - Or should the focus be less on streams as on manipulations?
-* Add Bit manipulation functions from [`crypto`](https://github.com/Notgnoshi/cryptography) library?
+* Sphinx documentation
