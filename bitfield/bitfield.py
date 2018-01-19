@@ -34,7 +34,7 @@ class Bitfield(object):
         """
         if isinstance(value, int):
             self.value = value
-        elif isinstance(value, bytes) or isinstance(value, bytearray):
+        elif isinstance(value, (bytes, bytearray)):
             self.value = int.from_bytes(value, 'little')
         else:
             raise TypeError(f'unsupported type for Bitfield: {type(value)}')
